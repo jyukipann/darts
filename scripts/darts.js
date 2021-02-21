@@ -16,7 +16,7 @@ var round = 8;
 var players = [];
 
 
-function resetCanvas(){
+/* function resetCanvas(){
 	canvas.width = width;
 	canvas.height = height;
 	canvas.style.backgroundColor = "rgb(200,200,200)";
@@ -31,7 +31,7 @@ async function resizeCanvas(){
 	height = window.innerHeight;
 	canvas.width = width;
 	canvas.height = height;
-}
+} */
 
 /* function hidden(){
 	canvas.style.visibility = "hidden";
@@ -77,7 +77,7 @@ var players_num = 0;
 var start_menu_div;
 async function start_menu(){
 	try{
-		start_menu_div.style.display = "inline";
+		start_menu_div.style.display = "block";
 		console.log("display");
 	}catch(err){
 		console.log("generate");
@@ -232,7 +232,7 @@ async function start_menu(){
 				selected_label.innerHTML = 'selected : ' + game_mode;
 				if(game_mode === "01"){
 					try{
-						zero_one_radio_button_list.style.display = "inline";
+						zero_one_radio_button_list.style.display = "block";
 					}catch(err){}
 				}else{
 					zero_one_radio_button_list.style.display = "none";
@@ -278,7 +278,12 @@ function game_start(){
 	}
 	debug_log();
 	if(players.length > 0){
-		start_menu_div.style.display = "none";
+		console.log(start_menu_div);
+		try{
+			start_menu_div.style.display = "none";
+		}catch(err){
+			console.log(err);
+		}
 		game();
 	}
 }
@@ -297,5 +302,5 @@ async function zeroOne(){
 }
 
 window.addEventListener("load", start_menu);
-window.addEventListener('resize', resizeCanvas);
-canvas.addEventListener("mouseup",getMouseXY);
+//window.addEventListener('resize', resizeCanvas);
+//canvas.addEventListener("mouseup",getMouseXY);
