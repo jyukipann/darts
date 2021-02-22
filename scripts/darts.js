@@ -316,50 +316,84 @@ async function countUP(){
 	var countUP_div = document.createElement("div");
 	countUP_div.className = "game";
 	countUP_div.innerHTML = "<h1>COUNT-UP</h1>"
-	document.body.appendChild(countUP_div);
 
 	var round_label = document.createElement("h3");
 	round_label.innerHTML = round;
-	countUP_div.appendChild(round_label);
 
 	var player_name_label = document.createElement("h2");
 	player_name_label.innerHTML = "";
-	countUP_div.appendChild(player_name_label);
-
+	
 	var point_label = document.createElement("h1");
 	point_label.innerHTML = "";
 	point_label.style.textAlign = "center";
+
+	var next_player_button = document.createElement("button");
+	next_player_button.innerHTML = "<h1>NEXT PLAYER</h1>"
+	next_player_button.style.visibility = "visible";
+	next_player_button.style.textAlign = "center";
+
+	var score_table = document.createElement("table");
+	
+	document.body.appendChild(countUP_div);
+	countUP_div.appendChild(round_label);
+	countUP_div.appendChild(player_name_label);
 	countUP_div.appendChild(point_label);
+	countUP_div.appendChild(next_player_button);
+	countUP_div.appendChild(score_table);
 
 
-	for(let i = 0; i < round; round--){
+	for(let i = 0; i < round; i++){
 		for(let j = 0; j < players.length; j++){
 			player_name_label.innerHTML = players[j];
-			for(let k = 3; k > 1; k--){
-				round_label.innerHTML = "round : " + round + " | " +" 🚀".repeat(k);
-				segment = await get_darts_board_segment();
-				let point = segment2point(segment);
+			let round_points = []
+			//next_player_button.style.visibility = "visible";
+			next_player_button.innerHTML = "<h1>MISS</h1>"
+			for(let k = 3; k > 0; k--){
+				round_label.innerHTML = "round : " + (i+1) + " | " 
+				round_points.forEach(point => {round_label.innerHTML += " "+point});
+				round_label.innerHTML += " 🚀".repeat(k);
+				console.log("await")
+				let result = await Promise.race([segment_and_point(), wait_button_tap(next_player_button)]);
+				if(result === "pushed"){
+					next_player_button.innerHTML = "<h1>NEXT PLAYER</h1>"
+					break;
+				}else{
+					[segment,point] = result;
+				}
+				round_points.push(point);
 				players_score_list[j] += point;
 				point_label.innerHTML = players_score_list[j];
-				console.log(segment);
-				console.log(point);
+				console.log(segment,point);
 			}
+			await new Promise(resolve => next_player_button.addEventListener("mouseup", resolve));
 		}
 	}
 	countUP_div.remove();
+	start_menu();
+}
+
+async function wait_button_tap(button){
+	return new Promise(resolve => button.addEventListener("mouseup", resolve("pushed")));
+}
+
+async function segment_and_point(){
+	let point = 0;
+	let segment = "";
+	while(point < 1 || 60 < point){
+		segment = await get_darts_board_segment();
+		point = segment2point(segment);
+		//console.log(segment,point);
+	}
+	return new Promise(resolve => {resolve([segment,point])});
 }
 
 async function get_darts_board_segment(){
-	console.log(arguments.callee.name,"start");
 	segcheck = "1234567890sdtiob"
 	segment = "";
-	while(){
-		while(segment.length < 3){
-			segment += await new Promise(resolve => window.addEventListener("keydown", (e) => {resolve(segcheck.includes(e.key)?e.key:"")}));
-		}
+	console.log("get_segment");
+	while(segment.length < 3){
+		segment += await new Promise(resolve => window.addEventListener("keydown", (e) => {resolve(segcheck.includes(e.key)?e.key:"")}));
 	}
-
-	console.log(arguments.callee.name,"end");
 	return new Promise(resolve => {resolve(segment)});
 }
 
@@ -369,8 +403,10 @@ function segment2point(segment){
 	}else if("ob" === segment.slice(1,3)){
 		return 50;
 	}
-	var num = 0;
-	num = 1*segment.slice(0,2);
+	var num = 1*segment.slice(0,2);
+	if(isNaN(num)){
+		num = 0;
+	}
 	switch(segment.slice(-1)){
 		case "s":
 			return num;
@@ -386,7 +422,7 @@ function segment2point(segment){
 async function pushed_esc(){
 	var result = confirm("Are you sure you want to exit?");
 	if(result){
-		try{console.log(document.getElementsByClassName("game"));document.getElementsByClassName("game")[0].remove();}catch(err){}
+		try{document.getElementsByClassName("game")[0].remove();}catch(err){}
 		start_menu();
 	}
 }
