@@ -75,16 +75,16 @@ var all_elements = [];
 var player_inputs = [];
 var players_num = 0;
 var start_menu_div;
-async function start_menu(){
+
+function start_menu(){
 	try{
 		start_menu_div.style.display = "block";
-		console.log("display");
+		//console.log("start_menu : display");
 	}catch(err){
-		console.log("generate");
-
+		//console.log("start_menu : generate");
 		start_menu_div = document.createElement("div");
 		start_menu_div.name = "start_menu";
-		start_menu_div.style.display = "inline";
+		start_menu_div.style.display = "block";
 	
 		var title = document.createElement("h1");
 		all_elements.push(title);
@@ -151,6 +151,7 @@ async function start_menu(){
 		form.appendChild(start_button);
 	
 		function set_last_players(){
+			//console.log(arguments.callee.name);
 			player_inputs = [];
 			players_num = 0;
 			players.forEach(name => {
@@ -159,6 +160,7 @@ async function start_menu(){
 		}
 	
 		function get_player_name_list(){
+			//console.log(arguments.callee.name);
 			players = [];
 			player_inputs.forEach(input => {
 				if(input.value !== ""){
@@ -169,7 +171,7 @@ async function start_menu(){
 		}
 	
 		function add_player_input(name){
-			//console.log("add_player_input");
+			//console.log(arguments.callee.name);
 	
 			player_inputs.push(document.createElement("input"));
 			all_elements.push(player_inputs[players_num]);
@@ -202,6 +204,7 @@ async function start_menu(){
 		}
 
 		function make_zero_one_radio_button(num){
+			//console.log(arguments.callee.name);
 			var zero_one_radio_button = document.createElement("input");
 			all_elements.push(zero_one_radio_button);
 			zero_one_radio_button.className = "start_menu";
@@ -210,7 +213,7 @@ async function start_menu(){
 			zero_one_radio_button.value = num;
 			zero_one_radio_button.addEventListener("mouseup",(e)=>{
 				zero_one_start = Number(e.target.value);
-				selected_label.innerHTML = 'selected : ' + game_mode + " start at " + zero_one_start;
+				selected_label.innerHTML = 'selected : ' + zero_one_start;
 			});
 			zero_one_radio_button_list.appendChild(zero_one_radio_button);
 			var zero_one_mode_num_label = document.createElement("span");
@@ -221,6 +224,7 @@ async function start_menu(){
 		}
 	
 		function make_radio_button(name){
+			//console.log(arguments.callee.name);
 			var game_radio_button = document.createElement("input");
 			all_elements.push(game_radio_button);
 			game_radio_button.className = "start_menu";
@@ -230,12 +234,11 @@ async function start_menu(){
 			game_radio_button.addEventListener("mouseup",(e)=>{
 				game_mode = e.target.value;
 				selected_label.innerHTML = 'selected : ' + game_mode;
+				let set = (s) => {try{zero_one_radio_button_list.style.display = s;}catch(err){console.log(err)}}
 				if(game_mode === "01"){
-					try{
-						zero_one_radio_button_list.style.display = "block";
-					}catch(err){}
+					set("block");
 				}else{
-					zero_one_radio_button_list.style.display = "none";
+					set("none");
 				}
 			});
 			radio_button_list.appendChild(game_radio_button);
@@ -248,14 +251,15 @@ async function start_menu(){
 	}
 }
 
-function game_start(){
+async function game_start(){
+	//console.log(arguments.callee.name);
 	function debug_log(){
-		console.log("game_start");
+		//console.log(arguments.callee.name);
 		console.log(players);
 		console.log(game_mode);
 		console.log(round);
 	}
-	var game;
+	var game = () => {console.log(game_mode+"()")};
 	switch(game_mode){
 		case "01":
 			if(zero_one_start < 901){
@@ -269,6 +273,7 @@ function game_start(){
 			break;
 		case "COUNT-UP":
 			round = 8;
+			game = countUP;
 			break;
 		case "CRICKET":
 			round = 20;
@@ -278,9 +283,9 @@ function game_start(){
 	}
 	debug_log();
 	if(players.length > 0){
-		console.log(start_menu_div);
 		try{
 			start_menu_div.style.display = "none";
+			console.log("display='none'");
 		}catch(err){
 			console.log(err);
 		}
@@ -289,18 +294,111 @@ function game_start(){
 }
 
 async function zeroOne(){
-	console.log("zero one : ",zero_one_start);
+	console.log(arguments.callee.name,zero_one_start);
 	var winer = -1;
-	for(let i = 0; i < round; round--){
+	for(let i = 0; i < round; i++){
 		if(winer > -1){
 			break;
 		}
-		for(let j = 0; j < players.length; i++){
+		for(let j = 0; j < players.length; j++){
 
 		}
 	}
 }
 
+async function countUP(){
+	players_score_list = [];
+	let segment = "";
+	for(let i = 0; i < players.length; i++){
+		players_score_list.push(0);
+	}
+
+	var countUP_div = document.createElement("div");
+	countUP_div.className = "game";
+	countUP_div.innerHTML = "<h1>COUNT-UP</h1>"
+	document.body.appendChild(countUP_div);
+
+	var round_label = document.createElement("h3");
+	round_label.innerHTML = round;
+	countUP_div.appendChild(round_label);
+
+	var player_name_label = document.createElement("h2");
+	player_name_label.innerHTML = "";
+	countUP_div.appendChild(player_name_label);
+
+	var point_label = document.createElement("h1");
+	point_label.innerHTML = "";
+	point_label.style.textAlign = "center";
+	countUP_div.appendChild(point_label);
+
+
+	for(let i = 0; i < round; round--){
+		for(let j = 0; j < players.length; j++){
+			player_name_label.innerHTML = players[j];
+			for(let k = 3; k > 1; k--){
+				round_label.innerHTML = "round : " + round + " | " +" 🚀".repeat(k);
+				segment = await get_darts_board_segment();
+				let point = segment2point(segment);
+				players_score_list[j] += point;
+				point_label.innerHTML = players_score_list[j];
+				console.log(segment);
+				console.log(point);
+			}
+		}
+	}
+	countUP_div.remove();
+}
+
+async function get_darts_board_segment(){
+	console.log(arguments.callee.name,"start");
+	segcheck = "1234567890sdtiob"
+	segment = "";
+	while(){
+		while(segment.length < 3){
+			segment += await new Promise(resolve => window.addEventListener("keydown", (e) => {resolve(segcheck.includes(e.key)?e.key:"")}));
+		}
+	}
+
+	console.log(arguments.callee.name,"end");
+	return new Promise(resolve => {resolve(segment)});
+}
+
+function segment2point(segment){
+	if("ib" === segment.slice(1,3)){
+		return 50;
+	}else if("ob" === segment.slice(1,3)){
+		return 50;
+	}
+	var num = 0;
+	num = 1*segment.slice(0,2);
+	switch(segment.slice(-1)){
+		case "s":
+			return num;
+		case "d":
+			return num*2;
+		case "t":
+			return num*3;
+		default:
+			return 0;
+	}
+}
+
+async function pushed_esc(){
+	var result = confirm("Are you sure you want to exit?");
+	if(result){
+		try{console.log(document.getElementsByClassName("game"));document.getElementsByClassName("game")[0].remove();}catch(err){}
+		start_menu();
+	}
+}
+
+async function keydown(e){
+	//console.log(e.key);
+	if(""+e.keyCode === "27"){
+		pushed_esc();
+	}
+}
+
 window.addEventListener("load", start_menu);
+window.addEventListener("keydown",keydown);
 //window.addEventListener('resize', resizeCanvas);
 //canvas.addEventListener("mouseup",getMouseXY);
