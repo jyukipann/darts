@@ -128,12 +128,17 @@ function start_menu(){
 		var players_list = document.createElement("div");
 		all_elements.push(players_list);
 		players_list.className = "start_menu";
+
+		var start_button_div = document.createElement("div");
+		start_button_div.style.textAlign = "center";
 	
-		var start_button = document.createElement("input");
+		var start_button = document.createElement("button");
 		all_elements.push(start_button);
 		start_button.className = "start_menu";
 		start_button.type = 'button';
 		start_button.value = "start";
+		start_button.style.textAlign = "center";
+		start_button.innerHTML = "<h1>start</h1>"
 		start_button.addEventListener("mouseup",() => {
 			get_player_name_list();
 			game_start();
@@ -148,7 +153,8 @@ function start_menu(){
 		radio_button_list.appendChild(zero_one_radio_button_list);
 		form.appendChild(add_player_button);
 		form.appendChild(players_list);
-		form.appendChild(start_button);
+		start_menu_div.appendChild(start_button_div);
+		start_button_div.appendChild(start_button);
 	
 		function set_last_players(){
 			//console.log(arguments.callee.name);
@@ -327,35 +333,61 @@ async function countUP(){
 	point_label.innerHTML = "";
 	point_label.style.textAlign = "center";
 
+	var button_div = document.createElement("div");
+	button_div.style.textAlign = "center";
+
 	var next_player_button = document.createElement("button");
-	next_player_button.innerHTML = "<h1>NEXT PLAYER</h1>"
+	next_player_button.innerHTML = "<h1>MISS</h1>"
 	next_player_button.style.visibility = "visible";
 	next_player_button.style.textAlign = "center";
 
 	var score_table = document.createElement("table");
+	score_table.className = "score_table";
+
+	var score_table_head = document.createElement("tr");
+
+	let tr_head = ["ROUND"].concat(players);
+	tr_head.forEach(head => {
+		let th = document.createElement("th");
+		th.innerHTML = head;
+		th.style.textAlign = "center";
+		score_table.appendChild(th);
+	});
 	
 	document.body.appendChild(countUP_div);
 	countUP_div.appendChild(round_label);
 	countUP_div.appendChild(player_name_label);
 	countUP_div.appendChild(point_label);
-	countUP_div.appendChild(next_player_button);
+	countUP_div.appendChild(button_div);
+	button_div.appendChild(next_player_button);
 	countUP_div.appendChild(score_table);
+	score_table.appendChild(score_table_head);
 
 
+	var tr,td;
 	for(let i = 0; i < round; i++){
+		tr = document.createElement("tr");
+		score_table.appendChild(tr);
+		td = document.createElement("td");
+		tr.appendChild(td);
+		td.innerHTML = i;
 		for(let j = 0; j < players.length; j++){
 			player_name_label.innerHTML = players[j];
-			let round_points = []
+			point_label.innerHTML = players_score_list[j];
+			let round_points = [];
 			//next_player_button.style.visibility = "visible";
 			next_player_button.innerHTML = "<h1>MISS</h1>"
 			for(let k = 3; k > 0; k--){
 				round_label.innerHTML = "round : " + (i+1) + " | " 
 				round_points.forEach(point => {round_label.innerHTML += " "+point});
 				round_label.innerHTML += " 🚀".repeat(k);
-				console.log("await")
 				let result = await Promise.race([segment_and_point(), wait_button_tap(next_player_button)]);
 				if(result === "pushed"){
 					next_player_button.innerHTML = "<h1>NEXT PLAYER</h1>"
+					round_label.innerHTML = "round : " + (i+1) + " | " 
+					round_points.forEach(point => {round_label.innerHTML += " "+point});
+					round_label.innerHTML += " -".repeat(k);
+					
 					break;
 				}else{
 					[segment,point] = result;
@@ -365,6 +397,9 @@ async function countUP(){
 				point_label.innerHTML = players_score_list[j];
 				console.log(segment,point);
 			}
+			round_label.innerHTML = "round : " + (i+1) + " | " 
+			round_points.forEach(point => {round_label.innerHTML += " "+point});
+			next_player_button.innerHTML = "<h1>NEXT PLAYER</h1>"
 			await new Promise(resolve => next_player_button.addEventListener("mouseup", resolve));
 		}
 	}
@@ -373,7 +408,7 @@ async function countUP(){
 }
 
 async function wait_button_tap(button){
-	return new Promise(resolve => button.addEventListener("mouseup", resolve("pushed")));
+	return new Promise(resolve => button.addEventListener("mouseup", (e)=>{console.log("button push");resolve("pushed");}));
 }
 
 async function segment_and_point(){
@@ -390,9 +425,9 @@ async function segment_and_point(){
 async function get_darts_board_segment(){
 	segcheck = "1234567890sdtiob"
 	segment = "";
-	console.log("get_segment");
 	while(segment.length < 3){
 		segment += await new Promise(resolve => window.addEventListener("keydown", (e) => {resolve(segcheck.includes(e.key)?e.key:"")}));
+		console.log(segment);
 	}
 	return new Promise(resolve => {resolve(segment)});
 }
