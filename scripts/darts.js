@@ -1,14 +1,11 @@
-/* var canvas = document.createElement("canvas");
-var ctx = canvas.getContext("2d");
-document.body.appendChild(canvas);
 var width = document.body.clientWidth;
 var height = window.innerHeight;
 var mouseX = 0, mouseY = 0;
 var mainloop;
 
-resetCanvas();
-hidden();
- */
+/* resetCanvas();
+hidden(); */
+
 var game_mode = "start_menu";
 var game_mode_list = ["01","COUNT-UP","CRICKET"];
 var zero_one_start = 301;
@@ -16,24 +13,26 @@ var round = 8;
 var players = [];
 
 
-/* function resetCanvas(){
+function resetCanvas(canvas,ctx){
+	width = document.body.clientWidth;
+	height = window.innerHeight;
 	canvas.width = width;
 	canvas.height = height;
-	canvas.style.backgroundColor = "rgb(200,200,200)";
+	//canvas.style.backgroundColor = "rgb(200,200,200)";
 	canvas.style.top = "0";
 	canvas.style.left = "0";
 	canvas.style.position = "absolute";
 	ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 
-async function resizeCanvas(){
+async function resizeCanvas(canvas){
 	width = document.body.clientWidth;
 	height = window.innerHeight;
 	canvas.width = width;
 	canvas.height = height;
-} */
+}
 
-/* function hidden(){
+function hidden(){
 	canvas.style.visibility = "hidden";
 }
 
@@ -41,7 +40,21 @@ function visible(){
 	canvas.style.visibility = "visible";
 }
 
-function getMouseXY(e){
+function display_text(text,px,time){
+	console.log("display_text");
+	var canvas = document.createElement("canvas");
+	var ctx = canvas.getContext("2d");
+	document.body.appendChild(canvas);
+	resetCanvas(canvas,ctx);
+	ctx.fillStyle = "black";
+	ctx.font = px+"px sans-serif";;
+	ctx.textAlign = "center";
+	ctx.textBaseline = 'middle';
+	ctx.fillText(text, width/2, height/2);
+	return canvas;
+}
+
+/* function getMouseXY(e){
 	var rect = canvas.getBoundingClientRect();
 	mouseX = e.clientX - rect.left;
 	mouseY = e.clientY - rect.top;
@@ -343,6 +356,7 @@ async function countUP(){
 
 	var score_table = document.createElement("table");
 	score_table.className = "score_table";
+	score_table.border = "1";
 
 	var score_table_head = document.createElement("tr");
 
@@ -370,45 +384,75 @@ async function countUP(){
 		score_table.appendChild(tr);
 		td = document.createElement("td");
 		tr.appendChild(td);
-		td.innerHTML = i;
+		td.innerHTML = i+1;
 		for(let j = 0; j < players.length; j++){
 			player_name_label.innerHTML = players[j];
 			point_label.innerHTML = players_score_list[j];
 			let round_points = [];
 			//next_player_button.style.visibility = "visible";
 			next_player_button.innerHTML = "<h1>MISS</h1>"
+
+			td = document.createElement("td");
+			tr.appendChild(td);
+			td.innerHTML = "";
+
 			for(let k = 3; k > 0; k--){
-				round_label.innerHTML = "round : " + (i+1) + " | " 
+				round_label.innerHTML = "round : " + (i+1) + " | ";
 				round_points.forEach(point => {round_label.innerHTML += " "+point});
 				round_label.innerHTML += " 🚀".repeat(k);
-				let result = await Promise.race([segment_and_point(), wait_button_tap(next_player_button)]);
-				if(result === "pushed"){
+				let result = await Promise.race([segment_and_point(), wait_button_tap(next_player_button), wait_keydown("Enter")]);
+
+				if(result === "pushed" || result === "keydown"){
 					next_player_button.innerHTML = "<h1>NEXT PLAYER</h1>"
-					round_label.innerHTML = "round : " + (i+1) + " | " 
+					round_label.innerHTML = "round : " + (i+1) + " | ";
 					round_points.forEach(point => {round_label.innerHTML += " "+point});
 					round_label.innerHTML += " -".repeat(k);
-					
+					round_points = round_points.concat([0,0,0]);
+					round_points = round_points.slice(0,3);
 					break;
 				}else{
 					[segment,point] = result;
 				}
+
 				round_points.push(point);
 				players_score_list[j] += point;
 				point_label.innerHTML = players_score_list[j];
 				console.log(segment,point);
+
+				td.innerHTML += point + " ";
 			}
-			round_label.innerHTML = "round : " + (i+1) + " | " 
+			round_label.innerHTML = "round : " + (i+1) + " | ";
 			round_points.forEach(point => {round_label.innerHTML += " "+point});
 			next_player_button.innerHTML = "<h1>NEXT PLAYER</h1>"
-			await new Promise(resolve => next_player_button.addEventListener("mouseup", resolve));
+
+			td.innerHTML = "";
+			round_points.forEach(point=>{td.innerHTML += point + " "});
+			td.innerHTML += players_score_list[j];
+
+			await Promise.race([wait_button_tap(next_player_button), wait_keydown("Enter")]);
 		}
 	}
+
+	//winer
+	let winner = players[players_score_list.indexOf(Math.max(...players_score_list))];
+	console.log(winner);
+	let canvas = display_text(winner,100);
+	await Promise.race([wait_timeout(3000), wait_button_tap(canvas), wait_keydown("Enter")]);
+	canvas.remove();
 	countUP_div.remove();
 	start_menu();
 }
 
 async function wait_button_tap(button){
-	return new Promise(resolve => button.addEventListener("mouseup", (e)=>{console.log("button push");resolve("pushed");}));
+	return new Promise(resolve => button.addEventListener("mouseup", (e)=>{console.log(button.name,"pushed");resolve("pushed");}));
+}
+
+async function wait_keydown(key){
+	return new Promise(resolve => window.addEventListener("keydown", (e) => {if(key === e.key)resolve("keydown");}))
+}
+
+async function wait_timeout(ms){
+	return new Promise(resolve => {setTimeout(()=>{resolve("timeout")},ms)});
 }
 
 async function segment_and_point(){
@@ -427,7 +471,7 @@ async function get_darts_board_segment(){
 	segment = "";
 	while(segment.length < 3){
 		segment += await new Promise(resolve => window.addEventListener("keydown", (e) => {resolve(segcheck.includes(e.key)?e.key:"")}));
-		console.log(segment);
+		//console.log(segment);
 	}
 	return new Promise(resolve => {resolve(segment)});
 }
